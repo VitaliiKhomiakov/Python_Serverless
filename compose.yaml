@@ -1,0 +1,28 @@
+name: python-serverless-lab
+
+services:
+  app:
+    image: ${APP_IMAGE:-python-serverless-lab:0.1.0}
+    build:
+      context: ./app
+      dockerfile: ../docker/Dockerfile
+    environment:
+      PORT: ${APP_PORT:-8080}
+    ports:
+      - "127.0.0.1:${APP_HOST_PORT:-8000}:${APP_PORT:-8080}"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    cpus: 1.0
+    mem_limit: 256m
+    pids_limit: 64
+    stop_grace_period: 20s
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
