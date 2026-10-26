@@ -16,3 +16,6 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 /app/dist/
+
+# Project-local cluster tools, downloads, kubeconfig and ownership records
+/.local/

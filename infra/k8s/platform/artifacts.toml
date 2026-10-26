@@ -1,0 +1,20 @@
+# Linux amd64; update versions and checksums together after compatibility review.
+[kind]
+url = "https://github.com/kubernetes-sigs/kind/releases/download/v0.33.0/kind-linux-amd64"
+sha256 = "aee6151561422756b764a4ae28e7f44cda5af5a9eead3cc9985112b1de8d8e0d"
+
+[kubectl]
+url = "https://dl.k8s.io/release/v1.35.8/bin/linux/amd64/kubectl"
+sha256 = "874d5e72dbb819f43cff16bcd1e4f8bac5b7f2361fe1e55049b0a6c676fb0cbf"
+
+[serving-crds]
+url = "https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-crds.yaml"
+sha256 = "b172ff4901ed50f8e4e09ff8616e54d22e264df7086ce8cb74f513a04812fe74"
+
+[serving-core]
+url = "https://github.com/knative/serving/releases/download/knative-v1.23.0/serving-core.yaml"
+sha256 = "be3f16c9c0ac9276cc173ef04871aaeac78537f9edb116310caa02f016e9cbc2"
+
+[kourier]
+url = "https://github.com/knative-extensions/net-kourier/releases/download/knative-v1.23.0/kourier.yaml"
+sha256 = "cded0c3c1d7669b1aa9f7484234b454ff3940a2b54a27d5ec4825c2d4003d01d"
