@@ -174,10 +174,10 @@ def deploy(lab: Lab, image: str) -> None:
     if not re.fullmatch(r"sha256:[0-9a-f]{64}", image_id):
         raise LabError("Unexpected local Docker image identity")
     reference = f"dev.local/serverless-lab:{image_id.removeprefix('sha256:')}"
+    rendered = render_service(lab.root / "infra/k8s/app/service.yaml", reference)
     run("docker", "tag", image_id, reference)
     lab.kind("load", "docker-image", reference, "--name", CLUSTER, timeout=240)
     apply(lab, lab.root / "infra/k8s/app/namespace.yaml")
-    rendered = render_service(lab.root / "infra/k8s/app/service.yaml", reference)
     # Admission checks Knative's additional field/feature rules before mutation.
     for extra in (("--dry-run=server",), ()):
         lab.kubectl(

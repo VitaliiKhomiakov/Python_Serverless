@@ -3,7 +3,7 @@ from collections.abc import Iterator
 import pytest
 from fastapi.testclient import TestClient
 
-from serverless_lab.main import create_app
+from serverless_lab.app_factory import create_app
 
 
 @pytest.fixture

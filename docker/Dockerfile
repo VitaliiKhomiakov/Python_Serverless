@@ -45,7 +45,4 @@ HEALTHCHECK --interval=5s --timeout=3s --start-period=5s --retries=3 \
               'http://127.0.0.1:' + os.environ['PORT'] + '/health', timeout=2 \
           ).status == 200"]
 
-CMD ["sh", "-c", \
-     "exec uvicorn serverless_lab.main:create_app \
-         --factory --host 0.0.0.0 --port \"$PORT\" \
-         --timeout-graceful-shutdown 10"]
+CMD ["python", "-m", "serverless_lab", "--host", "0.0.0.0"]

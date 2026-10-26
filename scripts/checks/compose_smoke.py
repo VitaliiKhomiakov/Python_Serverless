@@ -46,18 +46,32 @@ def inspect(container: str, template: str) -> str:
     return run("docker", "inspect", "--format", template, container)
 
 
-def request(port: int, path: str, body: object | None = None) -> tuple[int, object]:
+def request(
+    port: int, path: str, body: object | None = None, *, request_id: str | None = None
+) -> tuple[int, object]:
     client = http.client.HTTPConnection("127.0.0.1", port, timeout=5)
     try:
         payload = None if body is None else json.dumps(body).encode()
+        headers = {"Content-Type": "application/json"}
+        if request_id is not None:
+            headers.update(
+                {
+                    "X-Request-Id": request_id,
+                    "Authorization": "Bearer PRIVATE_HEADER_CHECK",
+                }
+            )
         client.request(
             "GET" if body is None else "POST",
             path,
             payload,
-            {"Content-Type": "application/json"},
+            headers,
         )
         response = client.getresponse()
         decoded: object = json.loads(response.read())
+        if request_id is not None:
+            assert response.getheader("x-request-id") == request_id
+            assert response.getheader("x-instance-id")
+            assert response.getheader("x-revision")
         return response.status, decoded
     finally:
         client.close()
@@ -79,6 +93,29 @@ def check_http(port: int) -> None:
         422,
         {"detail": "Invalid request."},
     )
+
+
+def check_logs(logs: str) -> None:
+    events: list[dict[str, object]] = []
+    for line in logs.splitlines():
+        if not line.startswith("{"):
+            continue
+        event: object = json.loads(line)
+        assert isinstance(event, dict)
+        if event.get("request_id") == "compose-log-check":
+            events.append({str(key): value for key, value in event.items()})
+    [completed] = events
+    assert completed["event"] == "request.completed"
+    assert completed["logger"] == "serverless_lab.requests"
+    assert completed["status"] == 200
+    assert completed["outcome"] == "completed"
+    duration = completed["duration_ms"]
+    assert isinstance(duration, (int, float)) and duration >= 0
+    assert completed["instance_id"] and completed["revision"]
+    assert (completed["route"], completed["method"]) == ("/analyze", "POST")
+    assert any("HTTP/1.1 200" in line for line in logs.splitlines())
+    assert any("Application shutdown complete" in line for line in logs.splitlines())
+    assert "PRIVATE_" not in logs and SAMPLE not in logs
 
 
 def check_runtime(container: str, expected_port: int) -> None:
@@ -205,13 +242,22 @@ def main() -> None:
         host, _, port = address.rpartition(":")
         assert host == "127.0.0.1", address
         check_http(int(port))
+        assert request(
+            int(port),
+            "/analyze?PRIVATE_QUERY_CHECK",
+            {"text": SAMPLE},
+            request_id="compose-log-check",
+        ) == (200, ANALYSIS)
         check_runtime(container, arguments.container_port)
         image_id = inspect(container, "{{.Image}}")
         check_shutdown(container, int(port))
         logs = run("docker", "logs", container, combined=True)
-        assert "Application shutdown complete" in logs
-        assert "PRIVATE_CHECK" not in logs and SAMPLE not in logs
-        print(f"PASS: HTTP, runtime isolation and in-flight shutdown; image {image_id}")
+        check_logs(logs)
+        print(
+            "PASS: HTTP, structured completion and server logs, "
+            "runtime isolation and in-flight shutdown; "
+            f"image {image_id}"
+        )
     finally:
         run(*compose, "down", "--timeout", "20", env=environment)
 
