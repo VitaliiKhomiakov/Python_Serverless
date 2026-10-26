@@ -19,3 +19,6 @@ __pycache__/
 
 # Project-local cluster tools, downloads, kubeconfig and ownership records
 /.local/
+
+# Local IDE settings
+/.idea/
