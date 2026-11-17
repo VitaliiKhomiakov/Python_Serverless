@@ -1,4 +1,4 @@
-# Python Serverless Lab
+# Python Serverless
 
 A text-analysis API demonstrating container-based serverless with FastAPI and
 Knative. Run locally with Docker Compose, or use Knative to explore request-driven
